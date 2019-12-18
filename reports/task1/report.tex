@@ -23,7 +23,7 @@ Task 1: Obtain, Load \& Visualize Datasets
 			Each dataset consists out of three folders:
 
 			\begin{description}
-				\item[imagesTr] The volumetric images that shell be used for training.
+				\item[imagesTr] The volumetric images that shall be used for training.
 				\item[labelsTr] The segmentation masks for the images in imagesTr.
 				\item[imagesTs] Images for testing.
 			\end{description}
@@ -90,7 +90,7 @@ Task 1: Obtain, Load \& Visualize Datasets
 
 	\section{Problems and future tasks}
 
-		There were no major problems with loading or visualizing the dataset. The next step will be to use the datasets for training an actual model. Therefore, we will probably need to do some preprocessing. For the sake of visualizing the data, we just used the \lstinline{aspect} parameter of the \lstinline{imshow} function from matplotlib to account for the different image resolutions per axis mentioned in section~\ref{loading}. For training an actual model, we probably will have to actually stretch the image according to those scaling factors. Otherwise, the model would be dependant on the (x/y/z-)resolutiion of the images that were used for training.
+		There were no major problems with loading or visualizing the dataset. The next step will be to use the datasets for training an actual model. Therefore, we will probably need to do some preprocessing. For the sake of visualizing the data, we just used the \lstinline{aspect} parameter of the \lstinline{imshow} function from matplotlib to account for the different image resolutions per axis mentioned in section~\ref{loading}. For training an actual model, we probably will have to actually stretch the image according to those scaling factors. Otherwise, the model would be dependant on the (x/y/z-)resolution of the images that were used for training.
 
 
 \end{document}

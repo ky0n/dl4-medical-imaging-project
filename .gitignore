@@ -128,5 +128,12 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+### specific 
 data/
 .idea/
+
+# tex
+*.log
+*.aux
+*.out
+*.synctex.gz
