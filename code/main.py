@@ -7,15 +7,9 @@ import matplotlib.pyplot as plt
 BASE_PATH = os.path.join(os.path.dirname(__file__), "..")       # base path of the git repo
 LIVER_PATH = os.path.join(BASE_PATH, 'data/Task03_Liver/')
 PROSTATE_PATH = os.path.join(BASE_PATH, 'data/Task05_Prostate/')
-
-
-LIVER_PREFIX = 'liver_'
-LIVER_POSTFIX = '.nii.gz'
-PROSTATE_PREFIX = 'prostate_'
-PROSTATE_POSTFIX = '.nii.gz'
-TRAINING = 'imagesTr/'
-TEST = 'imagesTs/'
-LABELS = 'labelsTr/'
+TRAINING = 'imagesTr'
+TEST = 'imagesTs'
+LABELS = 'labelsTr'
 
 
 def show_image_from_file(path):
@@ -101,11 +95,12 @@ def load_dataset(base_path):
 def main():
     print("Gude!")
 
-    image, sx, sy, sz = load_image(LIVER_PATH + TRAINING + 'liver_0.nii.gz')
-    segmentation, _, _, _ = load_image(LIVER_PATH + LABELS + 'liver_0.nii.gz')
+    image, sx, sy, sz = load_image(LIVER_PATH + TRAINING + '/liver_7.nii.gz')
+    segmentation, _, _, _ = load_image(LIVER_PATH + LABELS + '/liver_7.nii.gz')
+    show_image_collage(image, 5, sx, sy, sz)
     show_image_collage(image, 5, sx, sy, sz, segmentation)
 
-    image, sx, sy, sz = load_image(LIVER_PATH + TEST + 'liver_132.nii.gz')
+    image, sx, sy, sz = load_image(LIVER_PATH + TEST + '/liver_132.nii.gz')
     show_image_collage(image, 5, sx, sy, sz)
 
     all_files = load_dataset(LIVER_PATH)
