@@ -137,3 +137,8 @@ data/
 *.aux
 *.out
 *.synctex.gz
+*.fdb_latexmk
+*.fls
+
+/cache
+/data-orig

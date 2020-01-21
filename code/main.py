@@ -20,7 +20,9 @@ PROSTATE_PATH = os.path.join(BASE_PATH, 'data/Task05_Prostate/')
 TRAINING = 'imagesTr'
 TEST = 'imagesTs'
 LABELS = 'labelsTr'
-CACHE_PATH = "/home/tobias/temp/test-cache"     # todo change to something in the repo and add to gitignore
+CACHE_PATH = os.path.join(BASE_PATH, 'cache')
+if not os.path.exists(CACHE_PATH):
+    os.mkdir(CACHE_PATH)
 
 # todo
 # move cache path intoo repo
@@ -29,8 +31,7 @@ CACHE_PATH = "/home/tobias/temp/test-cache"     # todo change to something in th
 # - implement intersection over union
 # - The only notable changes to the original U-Net architecture are the use of padded convolutions to achieve identical output and input shapes, instance normalization and Leaky ReLUs instead of ReLUs
 
-# results from the experiment_planning/plan_and_preprocess_task.py script in nnUNet. Not sure, if those
-# parameters will be useful...
+# results from the experiment_planning/plan_and_preprocess_task.py script in nnUNet.
 options_liver = {
     0: {
         'batch_size': 2,
@@ -155,8 +156,8 @@ def one_hot_encode(segmentation):
     s1, s2, s3 = segmentation.shape
     encoded = np.zeros(shape=(s1, s2, s3, 3))
     encoded[:, :, :, 0][segmentation == 0] = 1
-    encoded[:, :, :, 0][segmentation == 1] = 1
-    encoded[:, :, :, 0][segmentation == 2] = 1
+    encoded[:, :, :, 1][segmentation == 1] = 1
+    encoded[:, :, :, 2][segmentation == 2] = 1
     return encoded
 
 
@@ -202,21 +203,22 @@ def make_train_examples(files, modality, patch_size, output_size):
             with open(cache_path, "rb") as f:
                 image_input, image_target, image_size, input_padding_before, target_padding_before = pickle.load(f)
         else:
+            # read image
             image_input, sx, sy, sz = load_image(file_input)
-            image_target, _, _, _ = load_image(file_target)
 
             # select modality
             if image_input.ndim == 3:
                 image_input = np.expand_dims(image_input, 3)
             image_input = image_input[:, :, :, modality:modality+1]
 
-            # on-hot encode the segmentation
-            image_target = one_hot_encode(image_target)
-
-            # resizeso they all have a common spacing / scaling?
+            # resize they all have a common spacing / scaling?
             new_spacing = 0.76757812, 0.76757812, 1.    # median from the liver dataset
             new_spacing = 2., 2., 2.    # actually, much smaller size so it fits into my ram
             image_input = rescale_image(image_input, sx, sy, sz, *new_spacing)
+
+            # load image target, one-hot-encode it and apply the same scaling factor
+            image_target, _, _, _ = load_image(file_target)
+            image_target = one_hot_encode(image_target)
             image_target = rescale_image(image_target, sx, sy, sz, *new_spacing)
 
             # add padding to the image
@@ -311,7 +313,7 @@ def main():
     print(f"Input shape: {unet.input_shape}")
     print(f"Output shape: {unet.output_shape}")
 
-    return      # stop here, I don't have enough RAM
+    #return      # stop here, I don't have enough RAM
 
     weights_file = os.path.join(CACHE_PATH, "liver-weights")
     if os.path.exists(weights_file):
