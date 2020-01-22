@@ -310,11 +310,19 @@ def main():
     #all_files = load_dataset(LIVER_PATH)
     #print(repr(all_files))
 
+    inp = input('1 for liver (default) - 2 for prostate\n')
+    if inp is '':
+        inp = 1
+    else:
+        inp = int(inp)
+
+    options = options_liver if inp == 1 else options_prostate
+
     # task 2
     unet = make_nnunet(
-        patch_size=options_liver[0]["patch_size"],
-        pool_op_kernel_sizes=options_liver[0]["pool_op_kernel_sizes"],
-        conv_kernel_sizes=options_liver[0]["conv_kernel_sizes"],
+        patch_size=options[0]["patch_size"],
+        pool_op_kernel_sizes=options[0]["pool_op_kernel_sizes"],
+        conv_kernel_sizes=options[0]["conv_kernel_sizes"],
         nr_classes=3
     )
     plot_model(unet, show_shapes=True, expand_nested=True, to_file='model.png')
@@ -324,7 +332,7 @@ def main():
 
     #return      # stop here, I don't have enough RAM
 
-    weights_file = os.path.join(CACHE_PATH, "liver-weights")
+    weights_file = os.path.join(CACHE_PATH, "liver-weights" if inp == 1 else "prostate-weights")
     if os.path.exists(weights_file):
         print("Model is already trained, loading weights from {}.".format(weights_file))
         unet.load_weights(weights_file)
@@ -332,7 +340,9 @@ def main():
         batch_size = 1  # limited by memory
 
         # select 10 random images for testing
-        files, _ = load_dataset(LIVER_PATH)
+        path = LIVER_PATH if inp == 1 else PROSTATE_PATH
+
+        files, _ = load_dataset(path)
         file_identifiers = list(files.keys())
         shuffle(file_identifiers)
         training_identifiers = file_identifiers[10:]
