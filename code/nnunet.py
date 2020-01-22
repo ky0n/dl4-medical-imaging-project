@@ -1,11 +1,11 @@
 import keras
 from keras import Input, Model
-from keras.layers import Conv3D, LeakyReLU, MaxPooling3D, Conv3DTranspose, Concatenate, UpSampling3D
-from keras.optimizers import Adam
+from keras.layers import Conv3D, LeakyReLU, MaxPooling3D, Conv3DTranspose, Concatenate, UpSampling3D, Reshape, BatchNormalization
+from keras.optimizers import Adam, Adadelta
 
 
 def conv_leakyrelu(filters, kernel_size, layer):
-    layer = Conv3D(filters=filters, kernel_size=kernel_size, padding="same")(layer)
+    layer = Conv3D(filters=filters, kernel_size=kernel_size, padding="same", use_bias=False)(layer)
     layer = LeakyReLU(alpha=0.1)(layer)
     return layer
 
@@ -13,6 +13,7 @@ def conv_leakyrelu(filters, kernel_size, layer):
 def convolution_step(filters, kernel_size, layer):
     layer = conv_leakyrelu(filters, kernel_size, layer)
     layer = conv_leakyrelu(filters, kernel_size, layer)
+    layer = BatchNormalization()(layer)
     return layer
 
 
@@ -37,12 +38,14 @@ def upconvolution_and_merge(filters, pool_op_kernel_size, last_layer, intermedia
 
 
 def final_convolution(filters, layer):
-    return Conv3D(
+    softmax = Conv3D(
         filters=filters,
         kernel_size=1,
         activation=keras.activations.softmax,
         padding="same",
-    )(layer)
+    )
+    reshape = Reshape((-1, filters))    # shape required for categorical_crossentropy loss.
+    return reshape(softmax(layer))
 
 
 def make_nnunet(patch_size, pool_op_kernel_sizes, conv_kernel_sizes, nr_classes):
@@ -76,6 +79,6 @@ def make_nnunet(patch_size, pool_op_kernel_sizes, conv_kernel_sizes, nr_classes)
     m = Model(inputs=input, outputs=output)
     m.compile(
         loss=keras.losses.categorical_crossentropy,
-        optimizer=Adam()
+        optimizer=Adadelta()
     )
     return m
