@@ -317,14 +317,14 @@ def main():
     )
     plot_model(unet, show_shapes=True, expand_nested=True, to_file='model.png')
 
-    print(f"Input shape: {unet.input_shape}")
-    print(f"Output shape: {unet.output_shape}")
+    print("Input shape: {}".format(unet.input_shape))
+    print("Output shape: {}".format(unet.output_shape))
 
     #return      # stop here, I don't have enough RAM
 
     weights_file = os.path.join(CACHE_PATH, "liver-weights")
     if os.path.exists(weights_file):
-        print(f"Model is already trained, loading weights from {weights_file}.")
+        print("Model is already trained, loading weights from {}.".format(weights_file))
         unet.load_weights(weights_file)
     else:
         batch_size = 1  # limited by memory
@@ -352,18 +352,18 @@ def main():
         batches_per_test_run = math.ceil(nr_test_examples / batch_size)
         # train!
         for epoch in range(25):
-            print(f"Epoch {epoch} of 25")
+            print("Epoch {} of 25".format(epoch))
             batches = make_train_batches(files_train, 0, unet.input_shape[1:4], unet.output_shape[1:4], batch_size, options_liver[0]["current_spacing"])
             for batch, (batch_xs, batch_ys) in enumerate(batches):
-                print(f"Batch {batch} of {batches_per_epoch}")
+                print("Batch {} of {}".format(batch, batches_per_epoch))
                 unet.train_on_batch(batch_xs, batch_ys)
             losses = np.zeros(batches_per_test_run)
             batches = make_train_batches(files_test, 0, unet.input_shape[1:4], unet.output_shape[1:4], batch_size, options_liver[0]["current_spacing"])
             for batch, (batch_xs, batch_ys) in enumerate(batches):
-                print(f"Test batch {batch} of {batches_per_test_run}")
+                print("Test batch {} of {}".format(batch, batches_per_test_run))
                 loss = unet.test_on_batch(batch_xs, batch_ys)
                 losses[batch] = loss
-            print(f"Test loss: {losses.mean()}")
+            print("Test loss: {}".format(losses.mean()))
 
         unet.save_weights(weights_file)
 
