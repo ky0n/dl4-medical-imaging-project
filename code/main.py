@@ -267,7 +267,8 @@ def make_train_batches(files, modality, patch_size, output_size, batch_size):
             yield np.stack(next_batch_inputs, axis=0), np.stack(next_batch_targets, axis=0)
             next_batch_inputs.clear()
             next_batch_targets.clear()
-    yield np.stack(next_batch_inputs, axis=0), np.stack(next_batch_targets, axis=0)
+    if len(next_batch_inputs) > 0:
+        yield np.stack(next_batch_inputs, axis=0), np.stack(next_batch_targets, axis=0)
 
 
 def intersection_over_union(predicted_classes, real_classes, nr_classes):
@@ -350,6 +351,8 @@ def main():
             for batch, (batch_xs, batch_ys) in enumerate(batches):
                 print("Batch {} of {}".format(batch, batches_per_epoch))
                 unet.train_on_batch(batch_xs, batch_ys)
+            print("Saving epoch result")
+            unet.save_weights(weights_file + "-epoch-" + str(epoch))
             losses = np.zeros(batches_per_test_run)
             batches = make_train_batches(files_test, 0, unet.input_shape[1:4], unet.output_shape[1:4], batch_size)
             for batch, (batch_xs, batch_ys) in enumerate(batches):
