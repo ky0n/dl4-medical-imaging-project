@@ -348,7 +348,7 @@ def main():
             print("Epoch {} of 25".format(epoch))
             batches = make_train_batches(files_train, 0, unet.input_shape[1:4], unet.output_shape[1:4], batch_size)
             for batch, (batch_xs, batch_ys) in enumerate(batches):
-                print("Batch {batch} of {}".format(batch, batches_per_epoch))
+                print("Batch {} of {}".format(batch, batches_per_epoch))
                 unet.train_on_batch(batch_xs, batch_ys)
             losses = np.zeros(batches_per_test_run)
             batches = make_train_batches(files_test, 0, unet.input_shape[1:4], unet.output_shape[1:4], batch_size)
