@@ -1,0 +1,35 @@
+\documentclass{article}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{graphicx}
+
+\author{Tobias Dorra, Hendrik Schick}
+\title{Project for Deep learning in medical imaging: Segmentation - MIC \\ \begin{large} 
+Task 3: Implementation II
+\end{large}}
+
+\begin{document}
+	
+	\maketitle
+
+	\section{Task}
+
+		The task was to continue working on the Implementation.
+
+	\section{Implementation}
+On the last week we made various changes to the code.
+
+We added a question at the beginning for the user to decide if the model should be trained with the liver data or the prostate data. 
+We fixed the usage of the spacing and are using the spacing now correctly to rescale the images to a common size. This way the training is a lot more efficient and overall better.
+\\
+\newline We also configured a virtual machine on the Google cloud platform to train  the data with more RAM and a strong GPU. In order to train with GPU we had to install the tensorflow-gpu pip package and CUDA aswell as cuDNN for the graphic card. The training time was still several hours long with the current hyperparameters.
+\\\\
+The changes also include bugfixes for not matching shapes of the multidimensional arrays of the data used to train the model and also edge cases in for loops.
+We also improved the overall logging and added logging for the training part to see the loss during the training.
+The comments for the code have also been improved.
+	\section{Problems and future tasks}
+We still need to achieve higher accuracy with the model and want to tune hyperparameters. In order to achieve this we will also look for better architecture setup and possible mistakes.
+
+We still want to train the model on the GPU machines and are trying it on friday, the 24.01.
+
+\end{document}
