@@ -195,7 +195,7 @@ def get_patches(image_size, patch_size, output_size):
                 yield tuple(inp_min), tuple(inp_max), tuple(out_min), tuple(out_max)
 
 
-def make_train_examples(files, modality, patch_size, output_size):
+def make_train_examples(files, modality, patch_size, output_size, new_spacing):
     for name, (file_input, file_target) in files.items():
         cache_path = os.path.join(CACHE_PATH, name + "-cache")
         if os.path.exists(cache_path):
@@ -206,18 +206,25 @@ def make_train_examples(files, modality, patch_size, output_size):
             # read image
             image_input, sx, sy, sz = load_image(file_input)
 
+            # transpose
+            image_input = np.transpose(image_input)
+            tmp = sx
+            sx = sz
+            sz = tmp
+
             # select modality
             if image_input.ndim == 3:
                 image_input = np.expand_dims(image_input, 3)
             image_input = image_input[:, :, :, modality:modality+1]
 
             # resize they all have a common spacing / scaling?
-            new_spacing = 0.76757812, 0.76757812, 1.    # median from the liver dataset
-            new_spacing = 2., 2., 2.    # actually, much smaller size so it fits into my ram
+            #new_spacing = 0.76757812, 0.76757812, 1.    # median from the liver dataset
+            #new_spacing = 2., 2., 2.    # actually, much smaller size so it fits into my ram
             image_input = rescale_image(image_input, sx, sy, sz, *new_spacing)
 
             # load image target, one-hot-encode it and apply the same scaling factor
             image_target, _, _, _ = load_image(file_target)
+            image_target = np.transpose(image_target)
             image_target = one_hot_encode(image_target)
             image_target = rescale_image(image_target, sx, sy, sz, *new_spacing)
 
@@ -257,10 +264,10 @@ def make_train_examples(files, modality, patch_size, output_size):
             yield input_patch, target_patch
 
 
-def make_train_batches(files, modality, patch_size, output_size, batch_size):
+def make_train_batches(files, modality, patch_size, output_size, batch_size, spacing):
     next_batch_inputs = []
     next_batch_targets = []
-    for input, target in make_train_examples(files, modality, patch_size, output_size):
+    for input, target in make_train_examples(files, modality, patch_size, output_size, spacing):
         next_batch_inputs.append(input)
         next_batch_targets.append(target)
         if len(next_batch_inputs) >= batch_size:
@@ -335,9 +342,9 @@ def main():
         # count number of training examples and warm up the cache of preprocessed images
         nr_training_examples = 0
         nr_test_examples = 0
-        for i, t in make_train_examples(files_train, 0, unet.input_shape[1:4], unet.output_shape[1:4]):
+        for i, t in make_train_examples(files_train, 0, unet.input_shape[1:4], unet.output_shape[1:4], options_liver[0]["current_spacing"]):
             nr_training_examples += 1
-        for i, t in make_train_examples(files_test, 0, unet.input_shape[1:4], unet.output_shape[1:4]):
+        for i, t in make_train_examples(files_test, 0, unet.input_shape[1:4], unet.output_shape[1:4], options_liver[0]["current_spacing"]):
             nr_test_examples += 1
 
         print("Training!")
@@ -346,12 +353,12 @@ def main():
         # train!
         for epoch in range(25):
             print(f"Epoch {epoch} of 25")
-            batches = make_train_batches(files_train, 0, unet.input_shape[1:4], unet.output_shape[1:4], batch_size)
+            batches = make_train_batches(files_train, 0, unet.input_shape[1:4], unet.output_shape[1:4], batch_size, options_liver[0]["current_spacing"])
             for batch, (batch_xs, batch_ys) in enumerate(batches):
                 print(f"Batch {batch} of {batches_per_epoch}")
                 unet.train_on_batch(batch_xs, batch_ys)
             losses = np.zeros(batches_per_test_run)
-            batches = make_train_batches(files_test, 0, unet.input_shape[1:4], unet.output_shape[1:4], batch_size)
+            batches = make_train_batches(files_test, 0, unet.input_shape[1:4], unet.output_shape[1:4], batch_size, options_liver[0]["current_spacing"])
             for batch, (batch_xs, batch_ys) in enumerate(batches):
                 print(f"Test batch {batch} of {batches_per_test_run}")
                 loss = unet.test_on_batch(batch_xs, batch_ys)
@@ -359,6 +366,5 @@ def main():
             print(f"Test loss: {losses.mean()}")
 
         unet.save_weights(weights_file)
-
 
 main()
