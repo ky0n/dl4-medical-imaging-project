@@ -356,7 +356,8 @@ def main():
             batches = make_train_batches(files_train, 0, unet.input_shape[1:4], unet.output_shape[1:4], batch_size, options_liver[0]["current_spacing"])
             for batch, (batch_xs, batch_ys) in enumerate(batches):
                 print("Batch {} of {}".format(batch, batches_per_epoch))
-                unet.train_on_batch(batch_xs, batch_ys)
+                tl = unet.train_on_batch(batch_xs, batch_ys)
+                print("Training loss = {}".format(tl))
             losses = np.zeros(batches_per_test_run)
             batches = make_train_batches(files_test, 0, unet.input_shape[1:4], unet.output_shape[1:4], batch_size, options_liver[0]["current_spacing"])
             for batch, (batch_xs, batch_ys) in enumerate(batches):
