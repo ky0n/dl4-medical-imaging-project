@@ -1,7 +1,9 @@
+import gc
 import math
 import pickle
 from random import shuffle
 
+import keras
 from keras.utils import np_utils, plot_model
 from nilearn import plotting
 import nibabel
@@ -370,6 +372,7 @@ def main():
                 print("Batch {} of {}".format(batch, batches_per_epoch))
                 tl = unet.train_on_batch(batch_xs, batch_ys)
                 print("Training loss = {}".format(tl))
+                gc.collect()
             print("Saving epoch result")
             unet.save_weights(weights_file + "-epoch-" + str(epoch))
             losses = np.zeros(batches_per_test_run)
@@ -378,7 +381,9 @@ def main():
                 print("Test batch {} of {}".format(batch, batches_per_test_run))
                 loss = unet.test_on_batch(batch_xs, batch_ys)
                 losses[batch] = loss
+                gc.collect()
             print("Test loss: {}".format(losses.mean()))
+            keras.backend.clear_session()
 
         unet.save_weights(weights_file)
 
