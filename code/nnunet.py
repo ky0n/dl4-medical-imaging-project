@@ -56,9 +56,9 @@ def make_nnunet(patch_size, pool_op_kernel_sizes, conv_kernel_sizes, nr_classes)
 
     # downwards path
     last_layer = input
-    filters = 32
+    filters = 16
     intermediate_layers = []
-    for conv_kernel_size, pool_op_kernel_size in zip(conv_kernel_sizes, pool_op_kernel_sizes[:-1]):
+    for conv_kernel_size, pool_op_kernel_size in zip(conv_kernel_sizes[:-1], pool_op_kernel_sizes):
         last_layer = convolution_step(filters, conv_kernel_size, last_layer)
         intermediate_layers.append(last_layer)
         last_layer = pooling(pool_op_kernel_size, last_layer)
