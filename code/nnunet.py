@@ -18,11 +18,12 @@ def convolution_step(filters, kernel_size, layer):
 
 
 def pooling(kernel_size, layer):
-    return MaxPooling3D(
+    layer = MaxPooling3D(
         pool_size=kernel_size,
         data_format="channels_last",
         padding="same"
     )(layer)
+    return layer
 
 
 def upconvolution_and_merge(filters, pool_op_kernel_size, last_layer, intermediate_layer):
@@ -34,7 +35,8 @@ def upconvolution_and_merge(filters, pool_op_kernel_size, last_layer, intermedia
         strides=pool_op_kernel_size,
     )
     concat = Concatenate(axis=4)  # assuming 'channels_last' image format
-    return concat([intermediate_layer, upconv(last_layer)])
+    last_layer = upconv(last_layer)
+    return concat([intermediate_layer, last_layer])
 
 
 def final_convolution(filters, layer):
@@ -54,7 +56,7 @@ def make_nnunet(patch_size, pool_op_kernel_sizes, conv_kernel_sizes, nr_classes)
 
     # downwards path
     last_layer = input
-    filters = 64
+    filters = 32
     intermediate_layers = []
     for conv_kernel_size, pool_op_kernel_size in zip(conv_kernel_sizes, pool_op_kernel_sizes[:-1]):
         last_layer = convolution_step(filters, conv_kernel_size, last_layer)

@@ -383,7 +383,6 @@ def main():
                 losses[batch] = loss
                 gc.collect()
             print("Test loss: {}".format(losses.mean()))
-            keras.backend.clear_session()
 
         unet.save_weights(weights_file)
 
