@@ -197,59 +197,69 @@ def get_patches(image_size, patch_size, output_size):
                 yield tuple(inp_min), tuple(inp_max), tuple(out_min), tuple(out_max)
 
 
+def load_and_preprocess(name, file_input, file_target, modality, patch_size, new_spacing):
+    cache_path = os.path.join(CACHE_PATH, name + "-cache")
+    if os.path.exists(cache_path) and False:
+        print(cache_path)
+        with open(cache_path, "rb") as f:
+            image_input, image_target, image_size, input_padding_before, target_padding_before = pickle.load(f)
+    else:
+        # read image
+        image_input, sx, sy, sz = load_image(file_input)
+
+        # transpose
+        image_input = np.transpose(image_input)
+        tmp = sx
+        sx = sz
+        sz = tmp
+
+        # select modality
+        if image_input.ndim == 3:
+            image_input = np.expand_dims(image_input, 3)
+        image_input = image_input[:, :, :, modality:modality + 1]
+
+        # resize they all have a common spacing / scaling?
+        # new_spacing = 0.76757812, 0.76757812, 1.    # median from the liver dataset
+        # new_spacing = 2., 2., 2.    # actually, much smaller size so it fits into my ram
+        image_input = rescale_image(image_input, sx, sy, sz, *new_spacing)
+
+        # load image target, one-hot-encode it and apply the same scaling factor
+        image_target, _, _, _ = load_image(file_target)
+        image_target = np.transpose(image_target)
+        image_target = one_hot_encode(image_target)
+        image_target = rescale_image(image_target, sx, sy, sz, *new_spacing)
+
+        # add padding to the image
+        input_padding_before = [0] * 3
+        input_padding_after = [0] * 3
+        target_padding_before = [0] * 3
+        image_size = image_input.shape[:3]
+        for d in range(3):
+            p1 = int((patch_size[d] - patch_size[d]) / 2) + 1
+            p2 = patch_size[d] + p1 - image_size[d]
+            input_padding_before[d] = max(p1, p2)
+            input_padding_after[d] = p1
+            p3 = patch_size[d] - image_size[d]
+            target_padding_before[d] = max(0, p3)
+        input_padding = tuple(zip(input_padding_before + [0], input_padding_after + [0]))
+        target_padding = tuple(zip(target_padding_before + [0], [0] * 4))
+        image_input = pad(image_input, input_padding, mode='symmetric')
+        image_target = pad(image_target, target_padding, mode='symmetric')
+
+        with open(cache_path, 'wb') as f:
+            pickle.dump((image_input, image_target, image_size, input_padding_before, target_padding_before,), f)
+
+    return image_input, image_target, image_size, input_padding_before, target_padding_before
+
+
 def make_train_examples(files, modality, patch_size, new_spacing):
     output_size = patch_size
     for name, (file_input, file_target) in files.items():
-        cache_path = os.path.join(CACHE_PATH, name + "-cache")
-        if os.path.exists(cache_path):
-            print(cache_path)
-            with open(cache_path, "rb") as f:
-                image_input, image_target, image_size, input_padding_before, target_padding_before = pickle.load(f)
-        else:
-            # read image
-            image_input, sx, sy, sz = load_image(file_input)
 
-            # transpose
-            image_input = np.transpose(image_input)
-            tmp = sx
-            sx = sz
-            sz = tmp
-
-            # select modality
-            if image_input.ndim == 3:
-                image_input = np.expand_dims(image_input, 3)
-            image_input = image_input[:, :, :, modality:modality+1]
-
-            # resize they all have a common spacing / scaling?
-            #new_spacing = 0.76757812, 0.76757812, 1.    # median from the liver dataset
-            #new_spacing = 2., 2., 2.    # actually, much smaller size so it fits into my ram
-            image_input = rescale_image(image_input, sx, sy, sz, *new_spacing)
-
-            # load image target, one-hot-encode it and apply the same scaling factor
-            image_target, _, _, _ = load_image(file_target)
-            image_target = np.transpose(image_target)
-            image_target = one_hot_encode(image_target)
-            image_target = rescale_image(image_target, sx, sy, sz, *new_spacing)
-
-            # add padding to the image
-            input_padding_before = [0] * 3
-            input_padding_after = [0] * 3
-            target_padding_before = [0] * 3
-            image_size = image_input.shape[:3]
-            for d in range(3):
-                p1 = int((patch_size[d] - output_size[d]) / 2) + 1
-                p2 = output_size[d] + p1 - image_size[d]
-                input_padding_before[d] = max(p1, p2)
-                input_padding_after[d] = p1
-                p3 = output_size[d] - image_size[d]
-                target_padding_before[d] = max(0, p3)
-            input_padding = tuple(zip(input_padding_before + [0], input_padding_after + [0]))
-            target_padding = tuple(zip(target_padding_before + [0], [0] * 4))
-            image_input = pad(image_input, input_padding, mode='symmetric')
-            image_target = pad(image_target, target_padding, mode='symmetric')
-
-            with open(cache_path, 'wb') as f:
-                pickle.dump((image_input, image_target, image_size, input_padding_before, target_padding_before, ), f)
+        # load file
+        image_input, image_target, image_size, input_padding_before, target_padding_before = load_and_preprocess(
+            name, file_input, file_target, modality, patch_size, new_spacing
+        )
 
         # generate image patches
         patch_positions = list(get_patches(image_size, patch_size, output_size))
@@ -302,11 +312,10 @@ def intersection_over_union(predicted_classes, real_classes, nr_classes):
 def main():
 
     # task 1
-    #print("Gude!")
-    #image, sx, sy, sz = load_image(LIVER_PATH + TRAINING + '/liver_7.nii.gz')
-    #segmentation, _, _, _ = load_image(LIVER_PATH + LABELS + '/liver_7.nii.gz')
+    image, sx, sy, sz = load_image(LIVER_PATH + TRAINING + '/liver_60.nii.gz')
+    segmentation, _, _, _ = load_image(LIVER_PATH + LABELS + '/liver_60.nii.gz')
     #show_image_collage(image, 5, sx, sy, sz)
-    #show_image_collage(image, 5, sx, sy, sz, segmentation)
+    show_image_collage(image, 5, sx, sy, sz, segmentation)
     #image, sx, sy, sz = load_image(LIVER_PATH + TEST + '/liver_132.nii.gz')
     #show_image_collage(image, 5, sx, sy, sz)
     #all_files = load_dataset(LIVER_PATH)
@@ -374,7 +383,7 @@ def main():
                 print("Training loss = {}".format(tl))
                 gc.collect()
             print("Saving epoch result")
-            unet.save_weights(weights_file + "-epoch-" + str(epoch))
+            unet.save(weights_file + "-epoch-" + str(epoch))
             losses = np.zeros(batches_per_test_run)
             batches = make_train_batches(files_test, 0, unet.input_shape[1:4], batch_size, options_liver[0]["current_spacing"])
             for batch, (batch_xs, batch_ys) in enumerate(batches):
@@ -384,6 +393,8 @@ def main():
                 gc.collect()
             print("Test loss: {}".format(losses.mean()))
 
-        unet.save_weights(weights_file)
+        unet.save(weights_file)
 
-main()
+
+if __name__ == "__main__":
+    main()
