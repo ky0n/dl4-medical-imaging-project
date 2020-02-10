@@ -50,9 +50,9 @@ def final_convolution(filters, layer):
     return reshape(softmax(layer))
 
 
-def make_nnunet(patch_size, pool_op_kernel_sizes, conv_kernel_sizes, nr_classes):
+def make_nnunet(patch_size, pool_op_kernel_sizes, conv_kernel_sizes, nr_classes, nr_channels):
 
-    input = Input(shape=tuple(patch_size + [1]))
+    input = Input(shape=tuple(patch_size + [nr_channels]))
 
     # downwards path
     last_layer = input

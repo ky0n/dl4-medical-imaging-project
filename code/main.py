@@ -199,7 +199,7 @@ def get_patches(image_size, patch_size, output_size):
                 yield tuple(inp_min), tuple(inp_max), tuple(out_min), tuple(out_max)
 
 
-def load_and_preprocess(name, file_input, file_target, modality, patch_size, new_spacing):
+def load_and_preprocess(name, file_input, file_target, patch_size, new_spacing, nr_channels):
     cache_path = os.path.join(CACHE_PATH, name + "-cache")
     if os.path.exists(cache_path) and False:
         print(cache_path)
@@ -215,10 +215,10 @@ def load_and_preprocess(name, file_input, file_target, modality, patch_size, new
         sx = sz
         sz = tmp
 
-        # select modality
+        # select modalities
         if image_input.ndim == 3:
             image_input = np.expand_dims(image_input, 3)
-        image_input = image_input[:, :, :, modality:modality + 1]
+        image_input = image_input[:, :, :, 0:nr_channels]
 
         # resize they all have a common spacing / scaling?
         # new_spacing = 0.76757812, 0.76757812, 1.    # median from the liver dataset
@@ -254,13 +254,13 @@ def load_and_preprocess(name, file_input, file_target, modality, patch_size, new
     return image_input, image_target, image_size, input_padding_before, target_padding_before
 
 
-def make_train_examples(files, modality, patch_size, new_spacing):
+def make_train_examples(files, patch_size, new_spacing, nr_channels):
     output_size = patch_size
     for name, (file_input, file_target) in files.items():
 
         # load file
         image_input, image_target, image_size, input_padding_before, target_padding_before = load_and_preprocess(
-            name, file_input, file_target, modality, patch_size, new_spacing
+            name, file_input, file_target, patch_size, new_spacing, nr_channels
         )
 
         # generate image patches
@@ -279,10 +279,10 @@ def make_train_examples(files, modality, patch_size, new_spacing):
             yield input_patch, target_patch.reshape((-1, 3))
 
 
-def make_train_batches(files, modality, patch_size, batch_size, spacing):
+def make_train_batches(files, patch_size, batch_size, spacing, nr_channels):
     next_batch_inputs = []
     next_batch_targets = []
-    for input, target in make_train_examples(files, modality, patch_size, spacing):
+    for input, target in make_train_examples(files, patch_size, spacing, nr_channels):
         next_batch_inputs.append(input)
         next_batch_targets.append(target)
         if len(next_batch_inputs) >= batch_size:
@@ -322,10 +322,10 @@ def print_prediction_details(predicted_classes, real_classes, nr_classes):
 def main():
 
     # task 1
-    image, sx, sy, sz = load_image(LIVER_PATH + TRAINING + '/liver_60.nii.gz')
-    segmentation, _, _, _ = load_image(LIVER_PATH + LABELS + '/liver_60.nii.gz')
+    #image, sx, sy, sz = load_image(LIVER_PATH + TRAINING + '/liver_60.nii.gz')
+    #segmentation, _, _, _ = load_image(LIVER_PATH + LABELS + '/liver_60.nii.gz')
     #show_image_collage(image, 5, sx, sy, sz)
-    show_image_collage(image, 5, sx, sy, sz, segmentation)
+    #show_image_collage(image, 5, sx, sy, sz, segmentation)
     #image, sx, sy, sz = load_image(LIVER_PATH + TEST + '/liver_132.nii.gz')
     #show_image_collage(image, 5, sx, sy, sz)
     #all_files = load_dataset(LIVER_PATH)
@@ -338,13 +338,15 @@ def main():
         inp = int(inp)
 
     options = options_liver if inp == 1 else options_prostate
+    nr_channels = 2 if inp == 1 else 1
 
     # task 2
     unet = make_nnunet(
         patch_size=options[0]["patch_size"],
         pool_op_kernel_sizes=options[0]["pool_op_kernel_sizes"],
         conv_kernel_sizes=options[0]["conv_kernel_sizes"],
-        nr_classes=3
+        nr_classes=3,
+        nr_channels=nr_channels
     )
     plot_model(unet, show_shapes=True, expand_nested=True, to_file='model.png')
 
@@ -354,54 +356,51 @@ def main():
     #return      # stop here, I don't have enough RAM
 
     weights_file = os.path.join(CACHE_PATH, "liver-weights" if inp == 1 else "prostate-weights")
-    if os.path.exists(weights_file):
-        print("Model is already trained, loading weights from {}.".format(weights_file))
-        unet.load_weights(weights_file)
-    else:
-        batch_size = 1  # limited by memory
 
-        # select 10 random images for testing
-        path = LIVER_PATH if inp == 1 else PROSTATE_PATH
+    batch_size = 1  # limited by memory
 
-        files, _ = load_dataset(path)
-        file_identifiers = list(files.keys())
-        shuffle(file_identifiers)
-        training_identifiers = file_identifiers[10:]
-        testing_identifiers = file_identifiers[:10]
-        files_train = {i: files[i] for i in training_identifiers}
-        files_test = {i: files[i] for i in testing_identifiers}
+    # select 10 random images for testing
+    path = LIVER_PATH if inp == 1 else PROSTATE_PATH
 
-        print("Preprocessing...")
-        # count number of training examples and warm up the cache of preprocessed images
-        nr_training_examples = 0
-        nr_test_examples = 0
-        for i, t in make_train_examples(files_train, 0, unet.input_shape[1:4], options_liver[0]["current_spacing"]):
-            nr_training_examples += 1
-        for i, t in make_train_examples(files_test, 0, unet.input_shape[1:4], options_liver[0]["current_spacing"]):
-            nr_test_examples += 1
+    files, _ = load_dataset(path)
+    file_identifiers = list(files.keys())
+    shuffle(file_identifiers)
+    training_identifiers = file_identifiers[10:]
+    testing_identifiers = file_identifiers[:10]
+    files_train = {i: files[i] for i in training_identifiers}
+    files_test = {i: files[i] for i in testing_identifiers}
 
-        print("Training!")
-        batches_per_epoch = math.ceil(nr_training_examples / batch_size)
-        batches_per_test_run = math.ceil(nr_test_examples / batch_size)
-        # train!
-        for epoch in range(25):
-            print("Epoch {} of 25".format(epoch))
-            batches = make_train_batches(files_train, 0, unet.input_shape[1:4], batch_size, options_liver[0]["current_spacing"])
-            for batch, (batch_xs, batch_ys) in enumerate(batches):
-                print("Batch {} of {}".format(batch, batches_per_epoch))
-                tl = unet.train_on_batch(batch_xs, batch_ys)
-                print("Training loss = {}".format(tl))
-                gc.collect()
-            print("Saving epoch result")
-            unet.save(weights_file + "-epoch-" + str(epoch))
-            losses = np.zeros(batches_per_test_run)
-            batches = make_train_batches(files_test, 0, unet.input_shape[1:4], batch_size, options_liver[0]["current_spacing"])
-            for batch, (batch_xs, batch_ys) in enumerate(batches):
-                print("Test batch {} of {}".format(batch, batches_per_test_run))
-                loss = unet.test_on_batch(batch_xs, batch_ys)
-                losses[batch] = loss
-                gc.collect()
-            print("Test loss: {}".format(losses.mean()))
+    print("Preprocessing...")
+    # count number of training examples and warm up the cache of preprocessed images
+    nr_training_examples = 0
+    nr_test_examples = 0
+    for i, t in make_train_examples(files_train, unet.input_shape[1:4], options_liver[0]["current_spacing"], nr_channels):
+        nr_training_examples += 1
+    for i, t in make_train_examples(files_test, unet.input_shape[1:4], options_liver[0]["current_spacing"], nr_channels):
+        nr_test_examples += 1
+
+    print("Training!")
+    batches_per_epoch = math.ceil(nr_training_examples / batch_size)
+    batches_per_test_run = math.ceil(nr_test_examples / batch_size)
+    # train!
+    for epoch in range(25):
+        print("Epoch {} of 25".format(epoch))
+        batches = make_train_batches(files_train, unet.input_shape[1:4], batch_size, options_liver[0]["current_spacing"], nr_channels)
+        for batch, (batch_xs, batch_ys) in enumerate(batches):
+            print("Batch {} of {}".format(batch, batches_per_epoch))
+            tl = unet.train_on_batch(batch_xs, batch_ys)
+            print("Training loss = {}".format(tl))
+            gc.collect()
+        print("Saving epoch result")
+        unet.save(weights_file + "-epoch-" + str(epoch))
+        losses = np.zeros(batches_per_test_run)
+        batches = make_train_batches(files_test, unet.input_shape[1:4], batch_size, options_liver[0]["current_spacing"], nr_channels)
+        for batch, (batch_xs, batch_ys) in enumerate(batches):
+            print("Test batch {} of {}".format(batch, batches_per_test_run))
+            loss = unet.test_on_batch(batch_xs, batch_ys)
+            losses[batch] = loss
+            gc.collect()
+        print("Test loss: {}".format(losses.mean()))
 
         unet.save(weights_file)
 
