@@ -3,13 +3,16 @@ from dataclasses import dataclass
 
 import matplotlib
 import matplotlib.pyplot as plt
+import nibabel
 import numpy as np
 
 # input data
 import typing
 from keras.engine.saving import load_model
+from nibabel import Nifti1Image, Nifti2Image
 
-from main import make_train_examples, load_and_preprocess, get_patches, make_image_slices, intersection_over_union
+from main import make_train_examples, load_and_preprocess, get_patches, make_image_slices, intersection_over_union, \
+    print_prediction_details
 
 
 @dataclass
@@ -26,14 +29,14 @@ class Settings:
 
 base_path = os.path.join(os.path.dirname(__file__), "..")
 settings = Settings(
-    train_losses_file=os.path.join(base_path, "liver_final_eval/training_losses.txt"),
-    test_losses_file=os.path.join(base_path, "liver_final_eval/test_losses.txt"),
-    test_files_list_file=os.path.join(base_path, "liver_final_eval/test_files.txt"),
+    train_losses_file=os.path.join(base_path, "liver_final_eval2/training_losses.txt"),
+    test_losses_file=os.path.join(base_path, "liver_final_eval2/test_losses.txt"),
+    test_files_list_file=os.path.join(base_path, "liver_final_eval2/test_files.txt"),
     test_files_images_base_path=os.path.join(base_path, "data/Task03_Liver/imagesTr"),
     test_files_labels_base_path=os.path.join(base_path, "data/Task03_Liver/labelsTr"),
-    model_file=os.path.join(base_path, "liver_final_eval/liver-model"),
+    model_file=os.path.join(base_path, "liver_final_eval2/liver-model"),
     current_spacing=[2.473119, 1.89831205, 1.89831205],
-    image_out_folder=os.path.join(base_path, "liver_final_eval/outimages"),
+    image_out_folder=os.path.join(base_path, "liver_final_eval2/outimages"),
 )
 
 
@@ -91,10 +94,14 @@ test_files = {
 }
 
 # render triptychs of input image, real labels, predicted labels
-def image_to_file(image, filename):
-    slices = make_image_slices(image, 6)
+def image_to_file(image, filename, segmask=False):
     plt.figure(figsize=(50, 10))
-    plt.imshow(slices)
+    if segmask:
+        slices = make_image_slices(image, 6, img_min=0, img_max=2)
+        plt.imshow(slices, vmin=0, vmax=2)
+    else:
+        slices = make_image_slices(image, 6)
+        plt.imshow(slices)
     plt.savefig(filename)
     plt.close()
 
@@ -119,11 +126,12 @@ for name, (file_input, file_target) in test_files.items():
     predicted = predicted[target_padding_before[0]:, target_padding_before[1]:, target_padding_before[2]:, :]
 
     image_to_file(image_input[:, :, :, 0], os.path.join(settings.image_out_folder, name + "-input.png"))
-    image_to_file(predicted.argmax(axis=3), os.path.join(settings.image_out_folder, name + "-predicted.png"))
-    image_to_file(image_target.argmax(axis=3), os.path.join(settings.image_out_folder, name + "-target.png"))
+    image_to_file(predicted.argmax(axis=3), os.path.join(settings.image_out_folder, name + "-predicted.png"), segmask=True)
+    image_to_file(image_target.argmax(axis=3), os.path.join(settings.image_out_folder, name + "-target.png"), segmask=True)
 
     iou = intersection_over_union(predicted, image_target.argmax(axis=3), 3)
     print("IOU = " + repr(iou))
+    print_prediction_details(predicted, image_target.argmax(axis=3), 3)
     ious = ious + [iou]
 
 ious = np.array(ious)

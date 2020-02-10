@@ -1,0 +1,10 @@
+liver_5.nii.gz
+liver_25.nii.gz
+liver_121.nii.gz
+liver_50.nii.gz
+liver_76.nii.gz
+liver_11.nii.gz
+liver_21.nii.gz
+liver_78.nii.gz
+liver_68.nii.gz
+liver_81.nii.gz

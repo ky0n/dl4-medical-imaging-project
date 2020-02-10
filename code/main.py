@@ -91,11 +91,13 @@ def load_segmentation_mask(filename):
     print(repr(i))
 
 
-def make_image_slices(image, nr_slices, colours=True):
+def make_image_slices(image, nr_slices, colours=True, img_max=None, img_min=None):
 
     # normalize values to be between 0 and 1
-    img_max = image.max()
-    img_min = image.min()
+    if img_max is None:
+        img_max = image.max()
+    if img_min is None:
+        img_min = image.min()
     image = (image - img_min) / (img_max - img_min)
 
     # calculate the distance between the slices
@@ -306,6 +308,14 @@ def intersection_over_union(predicted_classes, real_classes, nr_classes):
         union[np.logical_or(np.equal(predicted_classes, cls), np.equal(real_classes, cls))] = 1
         result.append(intersection.sum() / union.sum())
     return result
+
+
+def print_prediction_details(predicted_classes, real_classes, nr_classes):
+    predicted_classes = predicted_classes.argmax(axis=3)
+    for real_cls in range(nr_classes):
+        for pred_cls in range(nr_classes):
+            nr_pixels = np.logical_and(np.equal(predicted_classes, pred_cls), np.equal(real_classes, real_cls)).sum()
+            print("Real class {} predicted class {}: {} pixels".format(real_cls, pred_cls, nr_pixels))
 
 
 # Daten liegen im data Ordner, der sich im roo des Projektes befindet.

@@ -1,0 +1,139 @@
+(dl4med)  ✘ tobias@tobias-arch  ~/Documents/studium/deep_learning_medizinische_bildgebung/dl4-medical-imaging-project/code   master ●  python create_training_graphs.py
+Using TensorFlow backend.
+create_training_graphs.py:76: MatplotlibDeprecationWarning: Adding an axes using the same arguments as a previous axes currently reuses the earlier instance.  In a future version, a new instance will always be created and returned.  Meanwhile, this warning can be suppressed, and the future behavior ensured, by passing a unique label to each axes instance.
+  plt.axes().set_ylim([0, 0.05])
+2020-02-05 19:28:34.285622: I tensorflow/core/platform/cpu_feature_guard.cc:142] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX2 FMA
+2020-02-05 19:28:34.310604: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 2000800000 Hz
+2020-02-05 19:28:34.311002: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x561fd268a7f0 executing computations on platform Host. Devices:
+2020-02-05 19:28:34.311020: I tensorflow/compiler/xla/service/service.cc:175]   StreamExecutor device (0): Host, Default Version
+../data/Task03_Liver/imagesTr/liver_5.nii.gz
+../data/Task03_Liver/labelsTr/liver_5.nii.gz
+intersection_over_union
+IOU = [0.9990389205375546, 0.9313295788442704, 0.0]
+Real class 0 predicted class 0: 11621573 pixels
+Real class 0 predicted class 1: 3378 pixels
+Real class 0 predicted class 2: 0 pixels
+Real class 1 predicted class 0: 7802 pixels
+Real class 1 predicted class 1: 152142 pixels
+Real class 1 predicted class 2: 0 pixels
+Real class 2 predicted class 0: 0 pixels
+Real class 2 predicted class 1: 38 pixels
+Real class 2 predicted class 2: 0 pixels
+../data/Task03_Liver/imagesTr/liver_25.nii.gz
+../data/Task03_Liver/labelsTr/liver_25.nii.gz
+intersection_over_union
+IOU = [0.9980547240377572, 0.9078548144017102, 0.0]
+Real class 0 predicted class 0: 7133668 pixels
+Real class 0 predicted class 1: 10690 pixels
+Real class 0 predicted class 2: 41 pixels
+Real class 1 predicted class 0: 3173 pixels
+Real class 1 predicted class 1: 136742 pixels
+Real class 1 predicted class 2: 0 pixels
+Real class 2 predicted class 0: 0 pixels
+Real class 2 predicted class 1: 16 pixels
+Real class 2 predicted class 2: 0 pixels
+../data/Task03_Liver/imagesTr/liver_121.nii.gz
+../data/Task03_Liver/labelsTr/liver_121.nii.gz
+intersection_over_union
+IOU = [0.9987843789848962, 0.9267724483010997, 0.0]
+Real class 0 predicted class 0: 12613584 pixels
+Real class 0 predicted class 1: 7601 pixels
+Real class 0 predicted class 2: 249 pixels
+Real class 1 predicted class 0: 7502 pixels
+Real class 1 predicted class 1: 193739 pixels
+Real class 1 predicted class 2: 0 pixels
+Real class 2 predicted class 0: 0 pixels
+Real class 2 predicted class 1: 205 pixels
+Real class 2 predicted class 2: 0 pixels
+../data/Task03_Liver/imagesTr/liver_50.nii.gz
+../data/Task03_Liver/labelsTr/liver_50.nii.gz
+intersection_over_union
+IOU = [0.9983695972474412, 0.8666632923352061, 0.31540697674418605]
+Real class 0 predicted class 0: 14229682 pixels
+Real class 0 predicted class 1: 16385 pixels
+Real class 0 predicted class 2: 0 pixels
+Real class 1 predicted class 0: 6853 pixels
+Real class 1 predicted class 1: 154104 pixels
+Real class 1 predicted class 2: 4 pixels
+Real class 2 predicted class 0: 0 pixels
+Real class 2 predicted class 1: 467 pixels
+Real class 2 predicted class 2: 217 pixels
+../data/Task03_Liver/imagesTr/liver_76.nii.gz
+../data/Task03_Liver/labelsTr/liver_76.nii.gz
+intersection_over_union
+IOU = [0.9973932066458424, 0.8823120058092625, 0.7857768947583709]
+Real class 0 predicted class 0: 6534266 pixels
+Real class 0 predicted class 1: 5467 pixels
+Real class 0 predicted class 2: 62 pixels
+Real class 1 predicted class 0: 11075 pixels
+Real class 1 predicted class 1: 174966 pixels
+Real class 1 predicted class 2: 4650 pixels
+Real class 2 predicted class 0: 474 pixels
+Real class 2 predicted class 1: 2146 pixels
+Real class 2 predicted class 2: 26894 pixels
+../data/Task03_Liver/imagesTr/liver_11.nii.gz
+../data/Task03_Liver/labelsTr/liver_11.nii.gz
+intersection_over_union
+IOU = [0.9978120828980814, 0.9233842996290754, 0.4868913857677903]
+Real class 0 predicted class 0: 5984363 pixels
+Real class 0 predicted class 1: 10329 pixels
+Real class 0 predicted class 2: 16 pixels
+Real class 1 predicted class 0: 2777 pixels
+Real class 1 predicted class 1: 161065 pixels
+Real class 1 predicted class 2: 10 pixels
+Real class 2 predicted class 0: 0 pixels
+Real class 2 predicted class 1: 248 pixels
+Real class 2 predicted class 2: 260 pixels
+../data/Task03_Liver/imagesTr/liver_21.nii.gz
+../data/Task03_Liver/labelsTr/liver_21.nii.gz
+intersection_over_union
+IOU = [0.9983089527066356, 0.9302365616078729, 0.05725190839694656]
+Real class 0 predicted class 0: 7332141 pixels
+Real class 0 predicted class 1: 10227 pixels
+Real class 0 predicted class 2: 0 pixels
+Real class 1 predicted class 0: 2166 pixels
+Real class 1 predicted class 1: 194532 pixels
+Real class 1 predicted class 2: 0 pixels
+Real class 2 predicted class 0: 27 pixels
+Real class 2 predicted class 1: 2196 pixels
+Real class 2 predicted class 2: 135 pixels
+../data/Task03_Liver/imagesTr/liver_78.nii.gz
+../data/Task03_Liver/labelsTr/liver_78.nii.gz
+intersection_over_union
+IOU = [0.9980810173286447, 0.9037295769720624, 0.3237847222222222]
+Real class 0 predicted class 0: 8720155 pixels
+Real class 0 predicted class 1: 8418 pixels
+Real class 0 predicted class 2: 240 pixels
+Real class 1 predicted class 0: 7992 pixels
+Real class 1 predicted class 1: 165331 pixels
+Real class 1 predicted class 2: 21 pixels
+Real class 2 predicted class 0: 116 pixels
+Real class 2 predicted class 1: 1181 pixels
+Real class 2 predicted class 2: 746 pixels
+../data/Task03_Liver/imagesTr/liver_68.nii.gz
+../data/Task03_Liver/labelsTr/liver_68.nii.gz
+intersection_over_union
+IOU = [0.9978365011488814, 0.8832920659522054, 0.6653333333333333]
+Real class 0 predicted class 0: 8427768 pixels
+Real class 0 predicted class 1: 3576 pixels
+Real class 0 predicted class 2: 0 pixels
+Real class 1 predicted class 0: 14697 pixels
+Real class 1 predicted class 1: 140197 pixels
+Real class 1 predicted class 2: 152 pixels
+Real class 2 predicted class 0: 0 pixels
+Real class 2 predicted class 1: 99 pixels
+Real class 2 predicted class 2: 499 pixels
+../data/Task03_Liver/imagesTr/liver_81.nii.gz
+../data/Task03_Liver/labelsTr/liver_81.nii.gz
+intersection_over_union
+IOU = [0.9982455301447708, 0.935996743567948, 0.707983193277311]
+Real class 0 predicted class 0: 6012335 pixels
+Real class 0 predicted class 1: 6384 pixels
+Real class 0 predicted class 2: 7 pixels
+Real class 1 predicted class 0: 4176 pixels
+Real class 1 predicted class 1: 156362 pixels
+Real class 1 predicted class 2: 119 pixels
+Real class 2 predicted class 0: 0 pixels
+Real class 2 predicted class 1: 13 pixels
+Real class 2 predicted class 2: 337 pixels
+IOU mean:array([0.99819249, 0.90915714, 0.33424284])
