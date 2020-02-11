@@ -25,18 +25,20 @@ class Settings:
     model_file: str
     current_spacing: typing.List[float]
     image_out_folder: str
+    nr_channels: int
 
 
 base_path = os.path.join(os.path.dirname(__file__), "..")
 settings = Settings(
-    train_losses_file=os.path.join(base_path, "liver_final_eval2/training_losses.txt"),
-    test_losses_file=os.path.join(base_path, "liver_final_eval2/test_losses.txt"),
-    test_files_list_file=os.path.join(base_path, "liver_final_eval2/test_files.txt"),
-    test_files_images_base_path=os.path.join(base_path, "data/Task03_Liver/imagesTr"),
-    test_files_labels_base_path=os.path.join(base_path, "data/Task03_Liver/labelsTr"),
-    model_file=os.path.join(base_path, "liver_final_eval2/liver-model"),
-    current_spacing=[2.473119, 1.89831205, 1.89831205],
-    image_out_folder=os.path.join(base_path, "liver_final_eval2/outimages"),
+    train_losses_file=os.path.join(base_path, "prostate_final_eval/train_loss.txt"),
+    test_losses_file=os.path.join(base_path, "prostate_final_eval/test_loss.txt"),
+    test_files_list_file=os.path.join(base_path, "prostate_final_eval/test_files.txt"),
+    test_files_images_base_path=os.path.join(base_path, "data/Task05_Prostate/imagesTr"),
+    test_files_labels_base_path=os.path.join(base_path, "data/Task05_Prostate/labelsTr"),
+    model_file=os.path.join(base_path, "prostate_final_eval/prostate-weights"),
+    current_spacing=[3.5999999, 0.625, 0.625],
+    image_out_folder=os.path.join(base_path, "prostate_final_eval/outimages"),
+    nr_channels=2
 )
 
 
@@ -64,7 +66,7 @@ def moving_average(arr, size):
 batches_per_epoch = len(train_losses) / len(test_losses)
 plt.plot(
     np.arange(0, len(train_losses)) / batches_per_epoch,
-    moving_average(train_losses, 100),
+    moving_average(train_losses, 1),
     label="Train losses (moving average)"
 )
 plt.plot(
@@ -73,7 +75,7 @@ plt.plot(
     label="Test losses"
 )
 plt.legend()
-plt.axes().set_ylim([0, 0.05])
+#plt.axes().set_ylim([0, 0.05])
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
 plt.title("Development of the loss over time during training.")
@@ -108,7 +110,7 @@ def image_to_file(image, filename, segmask=False):
 ious = []
 for name, (file_input, file_target) in test_files.items():
     image_input, image_target, image_size, input_padding_before, target_padding_before = load_and_preprocess(
-        name, file_input, file_target, 0, model.input_shape[1:4], settings.current_spacing)
+        name, file_input, file_target, model.input_shape[1:4], settings.current_spacing, settings.nr_channels)
     predicted = np.zeros(image_target.shape + np.array(target_padding_before + [0]))
     patch_positions = list(get_patches(image_size, model.input_shape[1:4], model.input_shape[1:4]))
     for inp_min, inp_max, out_min, out_max in patch_positions:
@@ -125,7 +127,8 @@ for name, (file_input, file_target) in test_files.items():
 
     predicted = predicted[target_padding_before[0]:, target_padding_before[1]:, target_padding_before[2]:, :]
 
-    image_to_file(image_input[:, :, :, 0], os.path.join(settings.image_out_folder, name + "-input.png"))
+    image_to_file(image_input[:, :, :, 0], os.path.join(settings.image_out_folder, name + "-input0.png"))
+    image_to_file(image_input[:, :, :, 1], os.path.join(settings.image_out_folder, name + "-input1.png"))
     image_to_file(predicted.argmax(axis=3), os.path.join(settings.image_out_folder, name + "-predicted.png"), segmask=True)
     image_to_file(image_target.argmax(axis=3), os.path.join(settings.image_out_folder, name + "-target.png"), segmask=True)
 

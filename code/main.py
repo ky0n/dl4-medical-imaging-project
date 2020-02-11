@@ -208,17 +208,20 @@ def load_and_preprocess(name, file_input, file_target, patch_size, new_spacing, 
     else:
         # read image
         image_input, sx, sy, sz = load_image(file_input)
+        print("input shape: " + str(image_input.shape))
 
         # transpose
-        image_input = np.transpose(image_input)
+        image_input = np.swapaxes(image_input, 0, 2)
         tmp = sx
         sx = sz
         sz = tmp
+        print("after transpose shape: " + str(image_input.shape))
 
         # select modalities
         if image_input.ndim == 3:
             image_input = np.expand_dims(image_input, 3)
         image_input = image_input[:, :, :, 0:nr_channels]
+        print("after selecting channel shape: " + str(image_input.shape))
 
         # resize they all have a common spacing / scaling?
         # new_spacing = 0.76757812, 0.76757812, 1.    # median from the liver dataset
