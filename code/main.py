@@ -338,7 +338,7 @@ def main():
         inp = int(inp)
 
     options = options_liver if inp == 1 else options_prostate
-    nr_channels = 2 if inp == 1 else 1
+    nr_channels = 1 if inp == 1 else 2
 
     # task 2
     unet = make_nnunet(
